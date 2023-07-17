@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Kismet/GameplayStatics.h"
 #include "FantasyPlayerController.h"
+#include "Kismet/GameplayStatics.h"
+
 
 void AFantasyPlayerController::BeginPlay()
 {

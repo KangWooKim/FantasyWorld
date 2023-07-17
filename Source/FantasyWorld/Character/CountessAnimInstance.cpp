@@ -1,8 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
-#include "Countess.h"
 #include "CountessAnimInstance.h"
+#include "Countess.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -11,7 +10,7 @@ void UCountessAnimInstance::NativeInitializeAnimation()
 {
     Super::NativeInitializeAnimation();
 
-    // 소유자를 SlashCharacter 형식으로 캐스팅
+    // 소유자를 CountessCharacter 형식으로 캐스팅
     CountessCharacter = Cast<ACountess>(TryGetPawnOwner());
     if (CountessCharacter) {
         // 캐릭터의 이동 정보를 가져옵니다.

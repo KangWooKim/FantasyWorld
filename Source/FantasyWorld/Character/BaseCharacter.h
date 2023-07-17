@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "CharacterTypes.h"
+#include "FantasyWorld/HitInterface.h"
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
 
@@ -9,7 +10,7 @@ class UCameraComponent;
 class USpringArmComponent;
 
 UCLASS()
-class FANTASYWORLD_API ABaseCharacter : public ACharacter
+class FANTASYWORLD_API ABaseCharacter : public ACharacter, public IHitInterface
 {
 	GENERATED_BODY()
 
@@ -35,7 +36,21 @@ protected:
 	// 죽음 포즈 (편집창에서 확인 가능)
 	UPROPERTY(BlueprintReadOnly)
 	TEnumAsByte<EDeathPose> DeathPose;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UAttributeComponent* Attributes;
 
+	UFUNCTION(BlueprintCallable)
+	virtual void AttackEnd();
+	
+
+	UFUNCTION(BlueprintCallable)
+	virtual void DeathEnd();
+
+	UFUNCTION(BlueprintCallable)
+	virtual void HitReactEnd();
+
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	EActionState ActionState = EActionState::EAS_Unoccupied;
 	
 
 public:	
@@ -62,11 +77,21 @@ private :
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* ViewCamera;
 
-	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	EActionState ActionState = EActionState::EAS_Unoccupied;
+	
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	ELethalState LethalState = ELethalState::ELS_Off;
 
-	
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	UAnimMontage* AttackMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	UAnimMontage* HitReactMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	UAnimMontage* DeathMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Comabat")
+	TArray<FName> AttackMontageSection;
+
 };

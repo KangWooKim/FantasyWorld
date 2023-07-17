@@ -1,11 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "BaseCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "CharacterTypes.h"
+#include "FantasyWorld/Component/AttributeComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Engine/EngineTypes.h"
-#include "BaseCharacter.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -29,6 +31,8 @@ ABaseCharacter::ABaseCharacter()
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
 	GetMesh()->SetGenerateOverlapEvents(true);
 
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+
 	// 카메라와 카메라 붐을 설정합니다.
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetRootComponent());
@@ -37,7 +41,7 @@ ABaseCharacter::ABaseCharacter()
 	ViewCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ViewCamera"));
 	ViewCamera->SetupAttachment(CameraBoom);
 
-
+	Attributes = CreateDefaultSubobject<UAttributeComponent>(TEXT("Attributes"));
 }
 
 // Called when the game starts or when spawned
@@ -47,7 +51,9 @@ void ABaseCharacter::BeginPlay()
 	
 	// 태그를 설정합니다.
 	Tags.Add(FName("Character"));
+	Tags.AddUnique(FName("EngageableTarget"));
 }
+
 
 // Called every frame
 void ABaseCharacter::Tick(float DeltaTime)
@@ -139,5 +145,16 @@ void ABaseCharacter::LethalModeFinish() {
 }
 
 void ABaseCharacter::Attack() {
+	ActionState = EActionState::EAS_Attacking;
+}
 
+void ABaseCharacter::AttackEnd() {
+	ActionState = EActionState::EAS_Unoccupied;
+}
+
+void ABaseCharacter::HitReactEnd() {
+	ActionState = EActionState::EAS_Unoccupied;
+}
+
+void ABaseCharacter::DeathEnd() {
 }
