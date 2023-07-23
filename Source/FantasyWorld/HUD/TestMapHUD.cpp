@@ -7,7 +7,7 @@
 void ATestMapHUD::BeginPlay()
 {
 	Super::BeginPlay();
-	/*
+	
 	UWorld* World = GetWorld();
 	if (World) {
 		APlayerController* Controller = World->GetFirstPlayerController();
@@ -16,5 +16,5 @@ void ATestMapHUD::BeginPlay()
 			DieMenuOverlay->AddToViewport();
 		}
 	}
-*/
+
 }

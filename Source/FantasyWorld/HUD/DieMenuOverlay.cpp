@@ -22,10 +22,10 @@ void UDieMenuOverlay::NativeConstruct()
 
 void UDieMenuOverlay::OnReturnToMenuButtonClicked()
 {
-	UGameplayStatics::OpenLevel(this, "/Game/Maps/LobbyMenu");
+	UGameplayStatics::OpenLevel(this, "/Content/Maps/LobbyLevel");
 }
 
 void UDieMenuOverlay::OnRestartLevelButtonClicked()
 {
-	UGameplayStatics::OpenLevel(this, "/Game/Maps/LobbyMenu");
+	UGameplayStatics::OpenLevel(this, "/Game/Maps/LobbyLevel");
 }

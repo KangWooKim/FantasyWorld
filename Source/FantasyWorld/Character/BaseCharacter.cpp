@@ -8,6 +8,11 @@
 #include "FantasyWorld/Component/AttributeComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/EngineTypes.h"
+#include "Kismet/GameplayStatics.h"
+#include "FantasyWorld/Weapon/Weapon.h"
+#include "Components/BoxComponent.h"
+#include "FantasyWorld/PlayerController/FantasyPlayerController.h"
+#include "FantasyWorld/CameraShake/CombatCameraShake.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -42,6 +47,8 @@ ABaseCharacter::ABaseCharacter()
 	ViewCamera->SetupAttachment(CameraBoom);
 
 	Attributes = CreateDefaultSubobject<UAttributeComponent>(TEXT("Attributes"));
+
+	ActionState = EActionState::EAS_Unoccupied;
 }
 
 // Called when the game starts or when spawned
@@ -52,6 +59,9 @@ void ABaseCharacter::BeginPlay()
 	// 태그를 설정합니다.
 	Tags.Add(FName("Character"));
 	Tags.AddUnique(FName("EngageableTarget"));
+	SpawnDefaultWeapon();
+	PlayerController = PlayerController == nullptr ? Cast<AFantasyPlayerController>(GetController()) : PlayerController;
+	
 }
 
 
@@ -59,7 +69,6 @@ void ABaseCharacter::BeginPlay()
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
@@ -81,6 +90,7 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 // 앞뒤로 움직이기 위한 메서드 입니다.
 void ABaseCharacter::MoveForward(float Value)
 {
+
 	// 액션 상태가 Unoccupied가 아니라면 리턴합니다.
 	if (ActionState != EActionState::EAS_Unoccupied) return;
 	if (Controller && (Value != 0.f))
@@ -92,6 +102,7 @@ void ABaseCharacter::MoveForward(float Value)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		// 입력 방향으로 이동합니다.
 		AddMovementInput(Direction, Value);
+
 	}
 }
 
@@ -145,7 +156,165 @@ void ABaseCharacter::LethalModeFinish() {
 }
 
 void ABaseCharacter::Attack() {
-	ActionState = EActionState::EAS_Attacking;
+	if (CanAttack())
+	{
+		PlayAttackMontage();
+		ActionState = EActionState::EAS_Attacking;
+	}
+}
+
+int32 ABaseCharacter::PlayAttackMontage()
+{
+	return PlayRandomMontageSection(AttackMontage, AttackMontageSections);
+}
+
+int32 ABaseCharacter::PlayDeathMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && DeathMontage)
+	{
+		AnimInstance->Montage_Play(DeathMontage);
+	}
+	return int32();
+}
+
+void ABaseCharacter::StopAttackMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance) {
+		AnimInstance->Montage_Stop(0.25f, AttackMontage);
+	}
+}
+
+int32 ABaseCharacter::PlayRandomMontageSection(UAnimMontage* Montage, const TArray<FName>& SectionNames)
+{
+	if (SectionNames.Num() <= 0) return -1;
+	const int32 MaxSectionIndex = SectionNames.Num() - 1;
+	const int32 Selection = FMath::RandRange(0, MaxSectionIndex);
+	PlayMontageSection(Montage, SectionNames[Selection]);
+	return Selection;
+}
+
+void ABaseCharacter::PlayMontageSection(UAnimMontage* Montage, const FName& SectionName)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && Montage)
+	{
+		AnimInstance->Montage_Play(Montage);
+		AnimInstance->Montage_JumpToSection(SectionName, Montage);
+	}
+}
+
+bool ABaseCharacter::CanAttack()
+{
+	return ActionState == EActionState::EAS_Unoccupied;
+}
+
+bool ABaseCharacter::IsAlive()
+{
+	return Attributes && Attributes->IsAlive();
+}
+
+void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
+{
+	if (IsAlive() && Hitter)
+	{
+		DirectionalHitReact(Hitter->GetActorLocation());
+		PlayerController = PlayerController == nullptr ? Cast<AFantasyPlayerController>(GetController()) : PlayerController;
+		if (CombatCameraShake) {
+			PlayerController->ClientStartCameraShake(CombatCameraShake);
+		}
+		
+	}
+	else Die();
+
+	PlayHitSound(ImpactPoint);
+	SpawnHitParticles(ImpactPoint);
+
+	//SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+	if (Attributes && Attributes->GetHealthPercent() > 0.f) {
+		ActionState = EActionState::EAS_HitReaction;
+	}
+}
+
+void ABaseCharacter::Die_Implementation()
+{
+	Tags.Add(FName("Dead"));
+	PlayDeathMontage();
+}
+
+void ABaseCharacter::PlayHitSound(const FVector& ImpactPoint)
+{
+	if (HitSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			HitSound,
+			ImpactPoint
+		);
+	}
+}
+
+void ABaseCharacter::SpawnHitParticles(const FVector& ImpactPoint)
+{
+	if (HitParticles && GetWorld())
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			HitParticles,
+			ImpactPoint
+		);
+	}
+}
+
+void ABaseCharacter::PlayHitReactMontage(const FName& SectionName)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		AnimInstance->Montage_JumpToSection(SectionName, HitReactMontage);
+	}
+}
+
+void ABaseCharacter::DirectionalHitReact(const FVector& ImpactPoint)
+{
+	const FVector Forward = GetActorForwardVector();
+	// Lower Impact Point to the Enemy's Actor Location Z
+	const FVector ImpactLowered(ImpactPoint.X, ImpactPoint.Y, GetActorLocation().Z);
+	const FVector ToHit = (ImpactLowered - GetActorLocation()).GetSafeNormal();
+
+	// Forward * ToHit = |Forward||ToHit| * cos(theta)
+	// |Forward| = 1, |ToHit| = 1, so Forward * ToHit = cos(theta)
+	const double CosTheta = FVector::DotProduct(Forward, ToHit);
+	// Take the inverse cosine (arc-cosine) of cos(theta) to get theta
+	double Theta = FMath::Acos(CosTheta);
+	// convert from radians to degrees
+	Theta = FMath::RadiansToDegrees(Theta);
+
+	// if CrossProduct points down, Theta should be negative
+	const FVector CrossProduct = FVector::CrossProduct(Forward, ToHit);
+	if (CrossProduct.Z < 0)
+	{
+		Theta *= -1.f;
+	}
+
+	FName Section("FromBack");
+
+	if (Theta >= -45.f && Theta < 45.f)
+	{
+		Section = FName("FromFront");
+	}
+	else if (Theta >= -135.f && Theta < -45.f)
+	{
+		Section = FName("FromLeft");
+	}
+	else if (Theta >= 45.f && Theta < 135.f)
+	{
+		Section = FName("FromRight");
+	}
+
+	PlayHitReactMontage(Section);
 }
 
 void ABaseCharacter::AttackEnd() {
@@ -157,4 +326,68 @@ void ABaseCharacter::HitReactEnd() {
 }
 
 void ABaseCharacter::DeathEnd() {
+	
+	ActionState = EActionState::EAS_Dead;
+	PlayerController = PlayerController == nullptr ? Cast<AFantasyPlayerController>(GetController()) : PlayerController;
+	if (PlayerController)
+	{
+		PlayerController->bShowMouseCursor = true;
+		PlayerController->UnPossess();
+	}
+	Destroy();
+}
+
+void ABaseCharacter::HandleDamage(float DamageAmount)
+{
+	if (Attributes)
+	{
+		Attributes->ReceiveDamage(DamageAmount);
+	}
+}
+
+float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	HandleDamage(DamageAmount);
+	SetHUDHealth();
+	return DamageAmount;
+}
+
+void ABaseCharacter::SetHUDHealth()
+{
+	
+}
+
+void ABaseCharacter::SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
+{
+	if (EquippedWeapon && EquippedWeapon->GetWeaponBox())
+	{
+		EquippedWeapon->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
+		EquippedWeapon->IgnoreActors.Empty();
+	}
+
+	if (EquippedWeaponSecond && EquippedWeaponSecond->GetWeaponBox())
+	{
+		EquippedWeaponSecond->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
+		EquippedWeaponSecond->IgnoreActors.Empty();
+	}
+}
+
+void ABaseCharacter::SpawnDefaultWeapon()
+{
+	UWorld* World = GetWorld();
+	if (World && WeaponClass)
+	{
+		AWeapon* DefaultWeapon = World->SpawnActor<AWeapon>(WeaponClass);
+		DefaultWeapon->Equip(GetMesh(), FName("WeaponSocket1"), this, this);
+		EquippedWeapon = DefaultWeapon;
+	}
+
+	if (World && WeaponClass && GetMesh()->DoesSocketExist("WeaponSocket2")) {
+		AWeapon* DefaultWeaponSecond = World->SpawnActor<AWeapon>(WeaponClass);
+		DefaultWeaponSecond->Equip(GetMesh(), FName("WeaponSocket2"), this, this);
+		EquippedWeaponSecond = DefaultWeaponSecond;
+	}
+	else {
+		EquippedWeaponSecond = nullptr;
+	}
 }

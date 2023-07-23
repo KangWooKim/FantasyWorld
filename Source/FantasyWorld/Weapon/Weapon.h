@@ -45,7 +45,7 @@ private:
 		FVector BoxTraceExtent = FVector(5.f);
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
-		bool bShowBoxDebug = false;
+		bool bShowBoxDebug = true;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 		USoundBase* EquipSound;

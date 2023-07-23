@@ -156,6 +156,7 @@ int32 ABaseEnemy::PlayAttackMontage()
 
 int32 ABaseEnemy::PlayDeathMontage()
 {
+	UE_LOG(LogTemp, Warning, TEXT("deathMontage"))
 	const int32 Selection = PlayRandomMontageSection(DeathMontage, DeathMontageSections);
 	TEnumAsByte<EDeathPose> Pose(Selection);
 	if (Pose < EDeathPose::EDP_MAX)

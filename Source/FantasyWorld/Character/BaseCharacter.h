@@ -8,6 +8,8 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class AWeapon;
+class UCameraShakeBase;
 
 UCLASS()
 class FANTASYWORLD_API ABaseCharacter : public ACharacter, public IHitInterface
@@ -18,10 +20,36 @@ public:
 	// Sets default values for this character's properties
 	ABaseCharacter();
 
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override;
+	virtual void HandleDamage(float DamageAmount);
+	void SetHUDHealth();
+	bool IsAlive();
+	void PlayHitSound(const FVector& ImpactPoint);
+	void SpawnHitParticles(const FVector& ImpactPoint);
+
+	void SpawnDefaultWeapon();
+
+	UFUNCTION(BlueprintCallable)
+	void SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
+
+	UPROPERTY(VisibleAnywhere, Category = Weapon)
+	AWeapon* EquippedWeapon;
+
+	UPROPERTY(VisibleAnywhere, Category = Weapon)
+	AWeapon* EquippedWeaponSecond = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AWeapon> WeaponClass;
+
+	UFUNCTION(BlueprintNativeEvent)
+	void Die();
+
 	// 캐릭터의 움직임을 위한 메서드 입니다.
 	void MoveForward(float Value);
 	void MoveRight(float Value);
@@ -51,6 +79,13 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	EActionState ActionState = EActionState::EAS_Unoccupied;
+
+	virtual bool CanAttack();
+	void PlayHitReactMontage(const FName& SectionName);
+	virtual int32 PlayAttackMontage();
+	virtual int32 PlayDeathMontage();
+	void StopAttackMontage();
+	void DirectionalHitReact(const FVector& ImpactPoint);
 	
 
 public:	
@@ -69,6 +104,9 @@ public:
 
 private : 
 
+	void PlayMontageSection(UAnimMontage* Montage, const FName& SectionName);
+	int32 PlayRandomMontageSection(UAnimMontage* Montage, const TArray<FName>& SectionNames);
+
 	// 카메라 붐에 대한 속성입니다. 이는 게임 엔진에서 카메라와 캐릭터 사이의 거리를 조절합니다.
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* CameraBoom;
@@ -77,7 +115,11 @@ private :
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* ViewCamera;
 
-	
+	UPROPERTY(EditAnywhere, Category = Combat)
+	USoundBase* HitSound;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UParticleSystem* HitParticles;
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	ELethalState LethalState = ELethalState::ELS_Off;
@@ -92,6 +134,12 @@ private :
 	UAnimMontage* DeathMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Comabat")
-	TArray<FName> AttackMontageSection;
+	TArray<FName> AttackMontageSections;
 
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	TSubclassOf<UCameraShakeBase> CombatCameraShake;
+
+	class AFantasyPlayerController* PlayerController;
+
+	
 };
