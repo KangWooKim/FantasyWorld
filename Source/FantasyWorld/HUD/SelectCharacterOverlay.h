@@ -7,7 +7,7 @@
 #include "MediaAssets/Public/MediaPlayer.h"
 #include "MediaAssets/Public/MediaTexture.h"
 #include "Runtime/UMG/Public/Components/Image.h"
-#include "TutorialLevelOverlay.generated.h"
+#include "SelectCharacterOverlay.generated.h"
 
 class UButton;
 class UFileMediaSource;
@@ -17,29 +17,51 @@ class USoundBase;
  * 
  */
 UCLASS()
-class FANTASYWORLD_API UTutorialLevelOverlay : public UUserWidget
+class FANTASYWORLD_API USelectCharacterOverlay : public UUserWidget
 {
 	GENERATED_BODY()
 
-public :
+public:
 
-	virtual void NativeConstruct() override;
+	void NativeConstruct();
 
 	UFUNCTION()
-	void OnOkButtonClicked();
+	void OnCountessButtonClicked();
+
+	UFUNCTION()
+	void OnPhaseButtonClicked();
 
 	UFUNCTION()
 	void OnQuitButtonClicked();
 
 	UFUNCTION()
-	void PlayNextVideo();
+	void OnHoveredCountessButton();
 
 	UFUNCTION()
-	void VisibilityEnabled();
+	void OnUnHoveredCountessButton();
+
+	UFUNCTION()
+	void OnHoverPhaseButton();
+
+	UFUNCTION()
+	void OnUnHoverPhaseButton();
 
 protected:
 
+
 private:
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* CountessButton;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* PhaseButton;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* QuitButton;
+	
+	UPROPERTY(EditAnywhere)
+	USoundBase* ButtonClickedSound;
 
 	UPROPERTY(EditAnywhere)
 	UMediaPlayer* MediaPlayer;
@@ -58,19 +80,4 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	UImage* Image;
-
-
-	UPROPERTY(EditAnywhere)
-	int32 CurrentVideoIndex = 0;
-
-
-	UPROPERTY(meta = (BindWidget))
-	UButton* OkButton;
-
-	UPROPERTY(EditAnywhere)
-	USoundBase* ButtonClickedSound;
-
-	UPROPERTY(meta = (BindWidget))
-	UButton* QuitButton;
-	
 };

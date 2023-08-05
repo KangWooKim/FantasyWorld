@@ -13,6 +13,8 @@
 #include "Components/BoxComponent.h"
 #include "FantasyWorld/PlayerController/FantasyPlayerController.h"
 #include "FantasyWorld/CameraShake/CombatCameraShake.h"
+#include "FantasyWorld/HUD/TutorialLevelHUD.h"
+#include "FantasyWorld/HUD/TutorialLevelOverlay.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -61,7 +63,6 @@ void ABaseCharacter::BeginPlay()
 	Tags.AddUnique(FName("EngageableTarget"));
 	SpawnDefaultWeapon();
 	PlayerController = PlayerController == nullptr ? Cast<AFantasyPlayerController>(GetController()) : PlayerController;
-	
 }
 
 
@@ -193,6 +194,11 @@ int32 ABaseCharacter::PlayRandomMontageSection(UAnimMontage* Montage, const TArr
 	const int32 Selection = FMath::RandRange(0, MaxSectionIndex);
 	PlayMontageSection(Montage, SectionNames[Selection]);
 	return Selection;
+}
+
+AFantasyPlayerController* ABaseCharacter::GetPlayerController()
+{
+	return PlayerController;
 }
 
 void ABaseCharacter::PlayMontageSection(UAnimMontage* Montage, const FName& SectionName)
@@ -328,13 +334,13 @@ void ABaseCharacter::HitReactEnd() {
 void ABaseCharacter::DeathEnd() {
 	
 	ActionState = EActionState::EAS_Dead;
-	PlayerController = PlayerController == nullptr ? Cast<AFantasyPlayerController>(GetController()) : PlayerController;
-	if (PlayerController)
-	{
-		PlayerController->bShowMouseCursor = true;
-		PlayerController->UnPossess();
-	}
+	OnDeathEnd.Broadcast();
 	Destroy();
+}
+
+void ABaseCharacter::Destroy()
+{
+	Super::Destroy();
 }
 
 void ABaseCharacter::HandleDamage(float DamageAmount)
@@ -388,6 +394,6 @@ void ABaseCharacter::SpawnDefaultWeapon()
 		EquippedWeaponSecond = DefaultWeaponSecond;
 	}
 	else {
-		EquippedWeaponSecond = nullptr;
+		EquippedWeaponSecond = EquippedWeapon;
 	}
 }

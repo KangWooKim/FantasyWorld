@@ -18,7 +18,10 @@ class FANTASYWORLD_API ATutorialLevelHUD : public AHUD
 
 public :
 
+	ATutorialLevelHUD();
+
 	virtual void BeginPlay() override;
+	FORCEINLINE UTutorialLevelOverlay* GetTutorialLevelOverlay() { return TutorialLevelOverlay; }
 
 protected:
 
@@ -26,7 +29,6 @@ private:
 
 	UWorld* World;
 
-	
 	APlayerController* PlayerController;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Media")

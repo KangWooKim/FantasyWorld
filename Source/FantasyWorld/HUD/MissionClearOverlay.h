@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "DieMenuOverlay.generated.h"
+#include "MissionClearOverlay.generated.h"
 
+class UButton;
 class USoundBase;
 class UTextBlock;
 
@@ -13,35 +14,31 @@ class UTextBlock;
  * 
  */
 UCLASS()
-class FANTASYWORLD_API UDieMenuOverlay : public UUserWidget
+class FANTASYWORLD_API UMissionClearOverlay : public UUserWidget
 {
 	GENERATED_BODY()
 	
-public :
+public:
 
 	void NativeConstruct();
-	UFUNCTION()
-	void OnReturnToMenuButtonClicked();
 
 	UFUNCTION()
-	void OnRestartLevelButtonClicked();
+	void OnQuitButtonClicked();
 
 	UFUNCTION()
-	void UpdateTextBlock(int32 SlayedEnemy, int32 LeftEnemy);
+	void UpdateTextBlock(int32 SlayedEnemy);
+
+protected:
 
 
 private:
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* ReturnToMenu;
+	UButton* QuitButton;
 
-	UPROPERTY(meta = (BindWidget))
-	UButton* RestartLevel;
-
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	USoundBase* ButtonClickedSound;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Text;
-
 };

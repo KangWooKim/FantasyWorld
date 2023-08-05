@@ -7,6 +7,7 @@
 #include "FileMediaSource.h"
 #include "Styling/SlateBrush.h"
 #include "Kismet/GameplayStatics.h"
+#include "FantasyWorld/PlayerController/FantasyPlayerController.h"
 
 
 void UTutorialLevelOverlay::NativeConstruct()
@@ -43,11 +44,20 @@ void UTutorialLevelOverlay::NativeConstruct()
 
 void UTutorialLevelOverlay::OnOkButtonClicked()
 {
+    if (ButtonClickedSound) {
+        UGameplayStatics::PlaySound2D(this, ButtonClickedSound, 1.f, 1.f, 0.f, nullptr, nullptr, true);
+    }
+    GetWorld()->GetFirstPlayerController()->bShowMouseCursor = false;
+    AFantasyPlayerController* Controller = Cast<AFantasyPlayerController>(GetWorld()->GetFirstPlayerController());
+    Controller->RePossess();
     this->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UTutorialLevelOverlay::OnQuitButtonClicked()
 {
+    if (ButtonClickedSound) {
+        UGameplayStatics::PlaySound2D(this, ButtonClickedSound, 1.f, 1.f, 0.f, nullptr, nullptr, true);
+    }
     UWorld* World = GetWorld(); // Get the UWorld pointer.
     if (World != nullptr) // Always check if the pointer is valid.
     {
@@ -71,4 +81,14 @@ void UTutorialLevelOverlay::PlayNextVideo()
      Brush.SetResourceObject(MediaTexture);
      Image->SetBrush(Brush);
     
+     if (CurrentVideoIndex == MediaSources.Num() - 1) {
+         OkButton->SetVisibility(ESlateVisibility::Hidden);
+     }
+}
+
+void UTutorialLevelOverlay::VisibilityEnabled()
+{
+    this->SetVisibility(ESlateVisibility::Visible);
+    GetWorld()->GetFirstPlayerController()->bShowMouseCursor = true;
+    PlayNextVideo();
 }

@@ -4,9 +4,14 @@
 #include "TutorialLevelHUD.h"
 #include "TutorialLevelOverlay.h"
 
+ATutorialLevelHUD::ATutorialLevelHUD() {
+	
+}
+
 void ATutorialLevelHUD::BeginPlay()
 {
 	Super::BeginPlay();
+
 	World = World == nullptr ? GetWorld() : World;
 
 	if (World) {
@@ -14,7 +19,9 @@ void ATutorialLevelHUD::BeginPlay()
 	}
 
 	if (PlayerController && TutorialLevelOverlayClass) {
+		PlayerController->bShowMouseCursor = true;
 		TutorialLevelOverlay = CreateWidget<UTutorialLevelOverlay>(PlayerController, TutorialLevelOverlayClass);
 		TutorialLevelOverlay->AddToViewport();
 	}
+	
 }

@@ -10,6 +10,9 @@ class UCameraComponent;
 class USpringArmComponent;
 class AWeapon;
 class UCameraShakeBase;
+class AFantasyPlayerController;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathEnd);
 
 UCLASS()
 class FANTASYWORLD_API ABaseCharacter : public ACharacter, public IHitInterface
@@ -22,17 +25,31 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	FOnDeathEnd OnDeathEnd;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
+	UFUNCTION()
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override;
+
+	UFUNCTION()
 	virtual void HandleDamage(float DamageAmount);
+
+	UFUNCTION()
 	void SetHUDHealth();
+
+	UFUNCTION()
 	bool IsAlive();
+
+	UFUNCTION()
 	void PlayHitSound(const FVector& ImpactPoint);
+
+	UFUNCTION()
 	void SpawnHitParticles(const FVector& ImpactPoint);
 
+	UFUNCTION()
 	void SpawnDefaultWeapon();
 
 	UFUNCTION(BlueprintCallable)
@@ -58,8 +75,13 @@ protected:
 	void Turn(float Value);
 	void LookUp(float Value);
 
-	void LethalMode();
+	UFUNCTION()
+	virtual void LethalMode();
+
+	UFUNCTION()
 	void Attack();
+
+	UFUNCTION()
 	void LethalModeFinish();
 	// 죽음 포즈 (편집창에서 확인 가능)
 	UPROPERTY(BlueprintReadOnly)
@@ -86,11 +108,13 @@ protected:
 	virtual int32 PlayDeathMontage();
 	void StopAttackMontage();
 	void DirectionalHitReact(const FVector& ImpactPoint);
-	
+
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void Destroy();
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -100,6 +124,9 @@ public:
 
 	// 죽음 포즈 getter 함수
 	FORCEINLINE TEnumAsByte<EDeathPose> GetDeathPose() const { return DeathPose; }
+
+	UFUNCTION()
+	AFantasyPlayerController* GetPlayerController();
 
 
 private : 
@@ -141,5 +168,5 @@ private :
 
 	class AFantasyPlayerController* PlayerController;
 
-	
+	// Tutorial Level에서 움직임 조작법을 설명하기 위해 선언한 함수.
 };

@@ -11,9 +11,19 @@ void AFantasyPlayerController::BeginPlay()
 	TArray<AActor*> FoundActors;
 	UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("Character"), FoundActors);
 	if (FoundActors.Num() > 0) {
-		APawn* MyPawn = Cast<APawn>(FoundActors[0]);
+		MyPawn = Cast<APawn>(FoundActors[0]);
 		if (MyPawn) {
 			Possess(MyPawn);
 		}
 	}
+}
+
+void AFantasyPlayerController::RePossess()
+{
+	Possess(MyPawn);
+}
+
+APawn* AFantasyPlayerController::GetPawn()
+{
+	return MyPawn;
 }

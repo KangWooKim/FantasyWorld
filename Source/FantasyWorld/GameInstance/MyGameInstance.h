@@ -9,8 +9,8 @@
 // 선택한 캐릭터를 구분하기 위한 enum class
 UENUM(BlueprintType)
 enum class ECharacterTypes : uint8 {
-	Character1 UMETA(DisplayName = "Character1"),
-	Character2 UMETA(DisplayName = "Character2"),
+	Countess UMETA(DisplayName = "Countess"),
+	Phase UMETA(DisplayName = "Phase"),
 	Character3 UMETA(DisplayName = "Character3")
 };
 
@@ -24,14 +24,50 @@ public:
 	// 플레이 하고자 하는 캐릭터를 저장하는 함수
 	// @parameter
 	// ECharacterTypes CharacterType : 설정할 캐릭터
+	UFUNCTION()
 	void SetSelectedCharacter(ECharacterTypes CharacterType);
 
+	UFUNCTION()
+	void SetMapName(FString name);
+
 	// 어떠한 캐릭터를 골랐는지 파악하기 위한 함수
+	UFUNCTION()
 	ECharacterTypes GetSelectedCharacter();
 
+	UFUNCTION()
+	FString GetSelectedMap();
+
+	UFUNCTION()
+	void StartLevel();
+
+	FORCEINLINE int32 GetScore() { return Enemy;  }
+
+	FORCEINLINE float GetBGMVolume() { return BGMVolume; }
+
+	FORCEINLINE float GetEffectVolume() { return EffectVolume; }
+
+	UFUNCTION()
+	void SetBGMVolume(float v);
+
+	UFUNCTION()
+	void SetEffectVolume(float v);
 
 private:
 
 	// 플레이 하고자 하는 캐릭터를 저장하는 변수
+	UPROPERTY()
 	ECharacterTypes SelectedCharacter;
+
+	UPROPERTY()
+	FString MapName;
+
+
+	UPROPERTY()
+	int32 Enemy = 0;
+
+	UPROPERTY()
+	float BGMVolume = 1.f;
+
+	UPROPERTY()
+	float EffectVolume = 1.f;
 };

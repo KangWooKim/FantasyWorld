@@ -12,6 +12,8 @@ class AWeapon;
 class UAttributeComponent;
 class UAnimMontage;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FEnemyDeath);
+
 UCLASS()
 class FANTASYWORLD_API ABaseEnemy : public ACharacter, public IHitInterface
 {
@@ -20,6 +22,7 @@ class FANTASYWORLD_API ABaseEnemy : public ACharacter, public IHitInterface
 public:
 	ABaseEnemy();
 	virtual void Tick(float DeltaTime) override;
+	FEnemyDeath EnemyDeath;
 
 protected:
 	virtual void BeginPlay() override;

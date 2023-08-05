@@ -46,6 +46,7 @@ void ABaseEnemy::Die_Implementation()
 {
 	Tags.Add(FName("Dead"));
 	PlayDeathMontage();
+	EnemyDeath.Broadcast();
 }
 
 void ABaseEnemy::PlayHitReactMontage(const FName& SectionName)

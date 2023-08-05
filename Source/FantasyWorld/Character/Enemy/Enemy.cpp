@@ -12,6 +12,7 @@
 #include "FantasyWorld/Pickups/Soul.h"
 
 
+
 AEnemy::AEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -51,6 +52,7 @@ void AEnemy::Tick(float DeltaTime)
 
 float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (!EventInstigator || !DamageCauser) return DamageAmount;
 	HandleDamage(DamageAmount);
 	CombatTarget = EventInstigator->GetPawn();
 

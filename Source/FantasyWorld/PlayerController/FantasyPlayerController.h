@@ -18,11 +18,18 @@ public :
 
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	void RePossess();
+
+	UFUNCTION()
+	APawn* GetPawn();
+
 protected:
 
 
 private:
 
-
+	UPROPERTY()
+	APawn* MyPawn;
 
 };
