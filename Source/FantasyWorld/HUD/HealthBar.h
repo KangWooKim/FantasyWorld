@@ -17,4 +17,5 @@ public :
 
 	UPROPERTY(meta = (BindWidget))
 	class UProgressBar* HealthBar;
+
 };

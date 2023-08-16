@@ -10,6 +10,7 @@
 #include "FantasyWorld/HUD/HealthBarComponent.h"
 #include "FantasyWorld/Weapon/Weapon.h"
 #include "FantasyWorld/Pickups/Soul.h"
+#include "Kismet/GameplayStatics.h"
 
 
 
@@ -39,6 +40,9 @@ AEnemy::AEnemy()
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	EnemyController = EnemyController == nullptr ? Cast<AAIController>(GetController()) : EnemyController;
+
 	if (IsDead()) return;
 	if (EnemyState > EEnemyState::EES_Patrolling)
 	{
@@ -241,6 +245,9 @@ void AEnemy::ChaseTarget()
 	EnemyState = EEnemyState::EES_Chasing;
 	GetCharacterMovement()->MaxWalkSpeed = ChasingSpeed;
 	MoveToTarget(CombatTarget);
+	if (ChaseSound) {
+		UGameplayStatics::PlaySoundAtLocation(this, ChaseSound, this->GetActorLocation());
+	}
 }
 
 bool AEnemy::IsOutsideCombatRadius()

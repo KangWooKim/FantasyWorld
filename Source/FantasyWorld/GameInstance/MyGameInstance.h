@@ -46,11 +46,16 @@ public:
 
 	FORCEINLINE float GetEffectVolume() { return EffectVolume; }
 
+	FORCEINLINE float GetMouseSensitivity() const { return MouseSensitivity; }
+
 	UFUNCTION()
 	void SetBGMVolume(float v);
 
 	UFUNCTION()
 	void SetEffectVolume(float v);
+
+	UFUNCTION()
+	void SetMouseSensitivity(float value);
 
 private:
 
@@ -70,4 +75,7 @@ private:
 
 	UPROPERTY()
 	float EffectVolume = 1.f;
+
+	UPROPERTY(EditAnywhere)
+	float MouseSensitivity = 1.f;
 };

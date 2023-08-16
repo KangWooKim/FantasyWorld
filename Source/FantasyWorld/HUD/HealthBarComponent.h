@@ -16,9 +16,16 @@ class FANTASYWORLD_API UHealthBarComponent : public UWidgetComponent
 
 public:
 
+	UHealthBarComponent();
+
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 	void SetHealthPercent(float Percent);
 
 private:
 	UPROPERTY()
 	class UHealthBar* HealthBarWidget;
+
+	UPROPERTY()
+	class APlayerController* PlayerController;
 };

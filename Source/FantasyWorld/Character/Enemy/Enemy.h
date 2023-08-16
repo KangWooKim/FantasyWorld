@@ -34,6 +34,12 @@ public:
 
 	FORCEINLINE EEnemyState GetEnemyState() { return EnemyState; }
 
+	UPROPERTY(EditInstanceOnly, Category = "AI Navigation")
+	AActor* PatrolTarget;
+
+	UPROPERTY(EditInstanceOnly, Category = "AI Navigation")
+	TArray<AActor*> PatrolTargets;
+
 protected:
 	/** <AActor> */
 	virtual void BeginPlay() override;
@@ -107,12 +113,11 @@ private:
 	UPROPERTY()
 		class AAIController* EnemyController;
 
-	// Current patrol target
-	UPROPERTY(EditInstanceOnly, Category = "AI Navigation")
-		AActor* PatrolTarget;
+	UPROPERTY(EditAnywhere, Category = Combat)
+	USoundBase* ChaseSound;
 
-	UPROPERTY(EditInstanceOnly, Category = "AI Navigation")
-		TArray<AActor*> PatrolTargets;
+	// Current patrol target
+	
 
 	UPROPERTY(EditAnywhere)
 		double PatrolRadius = 200.f;
@@ -140,7 +145,7 @@ private:
 		float ChasingSpeed = 300.f;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-		float DeathLifeSpan = 8.f;
+		float DeathLifeSpan = 3.f;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 		TSubclassOf<class ASoul> SoulClass;

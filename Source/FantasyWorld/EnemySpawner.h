@@ -25,16 +25,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void SpawnEnemy();
-
 private:
-
-	UPROPERTY(EditAnywhere)
-	TArray<TSubclassOf<AEnemy>> EnemyList;
-
-	FVector SpawnLocation;
-	FRotator SpawnRotator;
-
-	int32 GetRandomEnemy();
 
 };

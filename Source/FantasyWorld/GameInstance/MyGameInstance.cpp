@@ -38,6 +38,11 @@ void UMyGameInstance::SetEffectVolume(float v)
 	EffectVolume = v;
 }
 
+void UMyGameInstance::SetMouseSensitivity(float value)
+{
+	MouseSensitivity = value;
+}
+
 void UMyGameInstance::SetMapName(FString name) {
 	MapName = name;
 }

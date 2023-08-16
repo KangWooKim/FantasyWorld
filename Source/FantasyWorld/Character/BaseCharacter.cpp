@@ -15,6 +15,11 @@
 #include "FantasyWorld/CameraShake/CombatCameraShake.h"
 #include "FantasyWorld/HUD/TutorialLevelHUD.h"
 #include "FantasyWorld/HUD/TutorialLevelOverlay.h"
+#include "FantasyWorld/HUD/CombatOverlay.h"
+#include "FantasyWorld/HUD/NormalLevelHUD.h"
+#include "FantasyWorld/Pickups/Soul.h"
+#include "FantasyWorld/GameInstance/MyGameInstance.h"
+#include "Enemy/Enemy.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -63,6 +68,18 @@ void ABaseCharacter::BeginPlay()
 	Tags.AddUnique(FName("EngageableTarget"));
 	SpawnDefaultWeapon();
 	PlayerController = PlayerController == nullptr ? Cast<AFantasyPlayerController>(GetController()) : PlayerController;
+	GameInstance = GameInstance == nullptr ? Cast<UMyGameInstance>(GetGameInstance()) : GameInstance;
+
+	if (PlayerController) {
+		HUD = Cast<ANormalLevelHUD>(PlayerController->GetHUD());
+		if (HUD) {
+			CombatOverlay = HUD->GetCombatOverlay();
+		}
+	}
+
+	if (CombatOverlay) {
+		CombatOverlay->UpdateSoulText(Attributes->GetSouls());
+	}
 }
 
 
@@ -70,6 +87,34 @@ void ABaseCharacter::BeginPlay()
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	PlayerController = PlayerController == nullptr ? Cast<AFantasyPlayerController>(GetController()) : PlayerController;
+	GameInstance = GameInstance == nullptr ? Cast<UMyGameInstance>(GetGameInstance()) : GameInstance;
+
+	if (PlayerController) {
+		HUD = HUD == nullptr ? Cast<ANormalLevelHUD>(PlayerController->GetHUD()) : HUD;
+		if (HUD) {
+			CombatOverlay = CombatOverlay == nullptr ? HUD->GetCombatOverlay() : CombatOverlay;
+		}
+	}
+
+	if (Attributes) {
+		Attributes->RegenStamina(DeltaTime);
+		if (CombatOverlay) {
+			CombatOverlay->UpdateStaminaBar(Attributes->GetStaminaPercent());
+		}
+	}
+
+	if (CurrentLockedTarget && bUseLockOnTarget) {
+		FVector LookAtDirection = CurrentLockedTarget->GetActorLocation() - GetActorLocation();
+		LookAtDirection.Z = 0; // 수평 방향만 고려
+		FRotator TargetRotation = LookAtDirection.Rotation();
+		FRotator CurrentRotation = GetController()->GetControlRotation();
+
+		// 부드럽게 회전
+		FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 3.f); // 마지막 매개변수는 보간 속도입니다.
+
+		GetController()->SetControlRotation(NewRotation);
+	}
 }
 
 // Called to bind functionality to input
@@ -84,8 +129,58 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAxis(FName("LookUp"), this, &ABaseCharacter::LookUp);
 
 	PlayerInputComponent->BindAction(FName("Jump"), IE_Pressed, this, &ABaseCharacter::Jump);
-	PlayerInputComponent->BindAction(FName("LethalMode"), IE_Pressed, this, &ABaseCharacter::LethalMode);
-	PlayerInputComponent->BindAction(FName("Attack"), IE_Pressed, this, &ABaseCharacter::Attack);
+	PlayerInputComponent->BindAction(FName("OpenMenu"), IE_Pressed, this, &ABaseCharacter::OpenMenu);
+	PlayerInputComponent->BindAction(FName("LockOnTarget"), IE_Pressed, this, &ABaseCharacter::LockOnTarget);
+}
+
+void ABaseCharacter::LockOnTarget()
+{
+	if (bUseLockOnTarget == false) {
+		bUseLockOnTarget = true;
+
+		AActor* ClosestEnemy = GetClosestEnemy();
+		if (ClosestEnemy) {
+			CurrentLockedTarget = ClosestEnemy;
+		}
+	}
+	else {
+		bUseLockOnTarget = false;
+		CurrentLockedTarget = nullptr; // 락온 취소
+	}
+}
+
+AActor* ABaseCharacter::GetClosestEnemy()
+{
+	TArray<AActor*> FoundEnemies;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemy::StaticClass(), FoundEnemies); // 적 클래스 찾기
+
+	float ClosestDistanceSqr = FLT_MAX;
+	AActor* ClosestEnemy = nullptr;
+
+	for (AActor* Enemy : FoundEnemies) {
+		float DistanceSqr = FVector::DistSquared(Enemy->GetActorLocation(), GetActorLocation());
+		if (DistanceSqr < ClosestDistanceSqr) {
+			ClosestDistanceSqr = DistanceSqr;
+			ClosestEnemy = Enemy;
+		}
+	}
+
+	return ClosestEnemy;
+}
+
+void ABaseCharacter::OpenMenu()
+{
+	HUD = HUD == nullptr ? Cast<ANormalLevelHUD>(PlayerController->GetHUD()) : HUD;
+	if (GetWorld() && PlayerController) {
+		PlayerController->SetPause(true);
+	}
+	if (HUD) {
+		HUD->ShowSettingsOverlay();
+		if (PlayerController) {
+			PlayerController->SetShowMouseCursor(true);
+			PlayerController->UnPossess();
+		}
+	}
 }
 
 // 앞뒤로 움직이기 위한 메서드 입니다.
@@ -139,17 +234,42 @@ void ABaseCharacter::StopJump()
 // 마우스를 이용한 캐릭터의 방향 전환을 위한 메서드 입니다.
 void ABaseCharacter::Turn(float Value)
 {
+	PlayerController = PlayerController == nullptr ? Cast<AFantasyPlayerController>(GetController()) : PlayerController;
+	if (PlayerController) {
+		AddControllerYawInput(Value * PlayerController->GetMouseSensitivity());
+	}
 	AddControllerYawInput(Value);
 }
 
 // 마우스를 이용해 위 아래로 방향 전환을 위한 메서드 입니다.
 void ABaseCharacter::LookUp(float Value)
 {
+	PlayerController = PlayerController == nullptr ? Cast<AFantasyPlayerController>(GetController()) : PlayerController;
+	if (PlayerController) {
+		AddControllerPitchInput(Value * PlayerController->GetMouseSensitivity());
+	}
 	AddControllerPitchInput(Value);
 }
 
 void ABaseCharacter::LethalMode() {
-	LethalState = ELethalState::ELS_On;
+	if (!Attributes) return;
+	if (LethalState == ELethalState::ELS_On) {
+		LethalState = ELethalState::ELS_Off;
+	}
+	else if (LethalState == ELethalState::ELS_Off && Attributes->GetSouls() >= 50) {
+		LethalState = ELethalState::ELS_On;
+		if (LethalModeSound) {
+			UGameplayStatics::PlaySoundAtLocation(this, LethalModeSound, this->GetActorLocation(), GameInstance->GetEffectVolume());
+		}
+		if (LethalModeParticle && GetWorld())
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(
+				GetWorld(),
+				LethalModeParticle,
+				this->GetActorLocation()
+			);
+		}
+	}
 }
 
 void ABaseCharacter::LethalModeFinish() {
@@ -161,6 +281,13 @@ void ABaseCharacter::Attack() {
 	{
 		PlayAttackMontage();
 		ActionState = EActionState::EAS_Attacking;
+		if (Attributes) {
+			Attributes->UseStamina(Attributes->GetAttackCost());
+			if (CombatOverlay) {
+				CombatOverlay->UpdateStaminaBar(Attributes->GetStaminaPercent());
+			}
+		}
+		
 	}
 }
 
@@ -213,7 +340,7 @@ void ABaseCharacter::PlayMontageSection(UAnimMontage* Montage, const FName& Sect
 
 bool ABaseCharacter::CanAttack()
 {
-	return ActionState == EActionState::EAS_Unoccupied;
+	return ActionState == EActionState::EAS_Unoccupied && Attributes && Attributes->GetStamina() >= Attributes->GetAttackCost();
 }
 
 bool ABaseCharacter::IsAlive()
@@ -230,11 +357,11 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* H
 		if (CombatCameraShake) {
 			PlayerController->ClientStartCameraShake(CombatCameraShake);
 		}
-		
+		PlayHitSound(ImpactPoint);
 	}
 	else Die();
 
-	PlayHitSound(ImpactPoint);
+	
 	SpawnHitParticles(ImpactPoint);
 
 	//SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -245,8 +372,13 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* H
 
 void ABaseCharacter::Die_Implementation()
 {
+	if (DeathSound) {
+		UGameplayStatics::PlaySoundAtLocation(this, DeathSound, this->GetActorLocation(), GameInstance->GetEffectVolume());
+	}
 	Tags.Add(FName("Dead"));
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	PlayDeathMontage();
+	ActionState = EActionState::EAS_Dead;
 }
 
 void ABaseCharacter::PlayHitSound(const FVector& ImpactPoint)
@@ -256,7 +388,8 @@ void ABaseCharacter::PlayHitSound(const FVector& ImpactPoint)
 		UGameplayStatics::PlaySoundAtLocation(
 			this,
 			HitSound,
-			ImpactPoint
+			ImpactPoint,
+			GameInstance->GetEffectVolume()
 		);
 	}
 }
@@ -327,13 +460,25 @@ void ABaseCharacter::AttackEnd() {
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
+void ABaseCharacter::AddSouls(ASoul* Soul)
+{
+	PlayerController = PlayerController == nullptr ? Cast<AFantasyPlayerController>(GetController()) : PlayerController;
+	HUD = HUD == nullptr ? Cast<ANormalLevelHUD>(PlayerController->GetHUD()) : HUD;
+	if (HUD) {
+		CombatOverlay = CombatOverlay == nullptr ? HUD->GetCombatOverlay() : CombatOverlay;
+	}
+	if (Attributes && CombatOverlay) {
+		Attributes->AddSouls(Soul->GetSouls());
+		CombatOverlay->UpdateSoulText(Attributes->GetSouls());
+	}
+}
+
 void ABaseCharacter::HitReactEnd() {
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
 void ABaseCharacter::DeathEnd() {
 	
-	ActionState = EActionState::EAS_Dead;
 	OnDeathEnd.Broadcast();
 	Destroy();
 }
@@ -360,7 +505,14 @@ float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 
 void ABaseCharacter::SetHUDHealth()
 {
-	
+	PlayerController = PlayerController == nullptr ? Cast<AFantasyPlayerController>(GetController()) : PlayerController;
+	HUD = HUD == nullptr ? Cast<ANormalLevelHUD>(PlayerController->GetHUD()) : HUD;
+	if (HUD) {
+		CombatOverlay = CombatOverlay == nullptr ? HUD->GetCombatOverlay() : CombatOverlay;
+	}
+	if (CombatOverlay && Attributes) {
+		CombatOverlay->UpdateHealthBar(Attributes->GetHealthPercent());
+	}
 }
 
 void ABaseCharacter::SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)

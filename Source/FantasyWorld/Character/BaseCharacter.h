@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "CharacterTypes.h"
 #include "FantasyWorld/HitInterface.h"
+#include "FantasyWorld/PickupInterface.h"
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
 
@@ -11,11 +12,12 @@ class USpringArmComponent;
 class AWeapon;
 class UCameraShakeBase;
 class AFantasyPlayerController;
+class UMyGameInstance;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathEnd);
 
 UCLASS()
-class FANTASYWORLD_API ABaseCharacter : public ACharacter, public IHitInterface
+class FANTASYWORLD_API ABaseCharacter : public ACharacter, public IHitInterface, public IPickupInterface
 {
 	GENERATED_BODY()
 
@@ -79,10 +81,10 @@ protected:
 	virtual void LethalMode();
 
 	UFUNCTION()
-	void Attack();
+	virtual void Attack();
 
 	UFUNCTION()
-	void LethalModeFinish();
+	virtual void LethalModeFinish();
 	// 죽음 포즈 (편집창에서 확인 가능)
 	UPROPERTY(BlueprintReadOnly)
 	TEnumAsByte<EDeathPose> DeathPose;
@@ -91,6 +93,11 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void AttackEnd();
+
+	virtual void AddSouls(ASoul* Soul) override;
+
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	ELethalState LethalState = ELethalState::ELS_Off;
 	
 
 	UFUNCTION(BlueprintCallable)
@@ -98,6 +105,15 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void HitReactEnd();
+
+	UFUNCTION()
+	void LockOnTarget();
+
+	UFUNCTION()
+	AActor* GetClosestEnemy();
+
+	UPROPERTY()
+	AActor* CurrentLockedTarget;
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	EActionState ActionState = EActionState::EAS_Unoccupied;
@@ -108,6 +124,9 @@ protected:
 	virtual int32 PlayDeathMontage();
 	void StopAttackMontage();
 	void DirectionalHitReact(const FVector& ImpactPoint);
+
+	UPROPERTY()
+	class UCombatOverlay* CombatOverlay;
 
 
 public:	
@@ -128,11 +147,15 @@ public:
 	UFUNCTION()
 	AFantasyPlayerController* GetPlayerController();
 
+	UFUNCTION()
+	void OpenMenu();
+
 
 private : 
 
 	void PlayMontageSection(UAnimMontage* Montage, const FName& SectionName);
 	int32 PlayRandomMontageSection(UAnimMontage* Montage, const TArray<FName>& SectionNames);
+
 
 	// 카메라 붐에 대한 속성입니다. 이는 게임 엔진에서 카메라와 캐릭터 사이의 거리를 조절합니다.
 	UPROPERTY(VisibleAnywhere)
@@ -148,8 +171,7 @@ private :
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UParticleSystem* HitParticles;
 
-	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	ELethalState LethalState = ELethalState::ELS_Off;
+	
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	UAnimMontage* AttackMontage;
@@ -166,7 +188,28 @@ private :
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TSubclassOf<UCameraShakeBase> CombatCameraShake;
 
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	USoundBase* DeathSound;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	USoundBase* LethalModeSound;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	UParticleSystem* LethalModeParticle;
+
+	UPROPERTY()
 	class AFantasyPlayerController* PlayerController;
 
+	UPROPERTY()
+	UMyGameInstance* GameInstance;
+
+	UPROPERTY()
+	class ANormalLevelHUD* HUD;
+
+	UPROPERTY()
+	bool bUseLockOnTarget = false;
+
 	// Tutorial Level에서 움직임 조작법을 설명하기 위해 선언한 함수.
+
+	
 };

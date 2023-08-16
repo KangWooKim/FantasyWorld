@@ -45,7 +45,7 @@ private:
 		FVector BoxTraceExtent = FVector(5.f);
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
-		bool bShowBoxDebug = true;
+		bool bShowBoxDebug = false;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 		USoundBase* EquipSound;
@@ -64,5 +64,6 @@ private:
 
 public:
 	FORCEINLINE UBoxComponent* GetWeaponBox() const { return WeaponBox; }
+	FORCEINLINE void SetWeaponDamage(float WeaponDamage) { Damage = WeaponDamage; }
 
 };

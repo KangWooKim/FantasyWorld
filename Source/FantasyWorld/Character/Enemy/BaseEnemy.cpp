@@ -28,10 +28,13 @@ void ABaseEnemy::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitte
 	if (IsAlive() && Hitter)
 	{
 		DirectionalHitReact(Hitter->GetActorLocation());
+		PlayHitSound(ImpactPoint);
 	}
-	else Die();
+	else {
+		Die();
+	}
 
-	PlayHitSound(ImpactPoint);
+	
 	SpawnHitParticles(ImpactPoint);
 }
 
@@ -44,6 +47,9 @@ void ABaseEnemy::Attack()
 
 void ABaseEnemy::Die_Implementation()
 {
+	if (DeathSound) {
+		UGameplayStatics::PlaySoundAtLocation(this, DeathSound, this->GetActorLocation());
+	}
 	Tags.Add(FName("Dead"));
 	PlayDeathMontage();
 	EnemyDeath.Broadcast();

@@ -9,6 +9,7 @@
 class UMyGameInstance;
 class USlider;
 class UButton;
+class AFantasyPlayerController;
 
 /**
  * 
@@ -29,6 +30,9 @@ public:
 	void HandleEffectSoundVolumeChanged(float value);
 
 	UFUNCTION()
+	void HandleMouseSensitivitySliderChanged(float value);
+
+	UFUNCTION()
 	void OnQuitButtonClicked();
 
 	UFUNCTION()
@@ -37,19 +41,55 @@ public:
 	UFUNCTION()
 	void HideContinueButton();
 
-protected:
+	UFUNCTION()
+	void OnResolutionHighButtonClicked();
 
+	UFUNCTION()
+	void OnResolutionMiddleButtonClicked();
 
-private:
+	UFUNCTION()
+	void OnResolutionLowButtonClicked();
 
-	UPROPERTY()
-	UMyGameInstance* GameInstance;
+	UFUNCTION()
+	void OnFullScreenModeButtonClicked();
+
+	UFUNCTION()
+	void OnWindowModeButtonClicked();
 
 	UPROPERTY(meta = (BindWidget))
 	USlider* BGMVolume;
 
 	UPROPERTY(meta = (BindWidget))
 	USlider* EffectSoundVolume;
+
+	UPROPERTY(meta = (BindWidget))
+	USlider* MouseSensitivitySlider;
+
+protected:
+
+
+private:
+
+	UPROPERTY()
+	AFantasyPlayerController* Controller;
+
+	UPROPERTY()
+	UMyGameInstance* GameInstance;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* ResolutionHigh;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* ResolutionMiddle;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* ResolutionLow;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* FullScreenMode;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton * WindowMode;
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* ContinueButton;

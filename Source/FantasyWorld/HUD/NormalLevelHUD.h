@@ -10,6 +10,9 @@ class UMissionClearOverlay;
 class UDieMenuOverlay;
 class AFantasyPlayerController;
 class UMissionPreviewOverlay;
+class UCombatOverlay;
+class USettingsOverlay;
+class UMyGameInstance;
 
 /**
  * 
@@ -45,6 +48,27 @@ public:
 	UFUNCTION()
 	void RemoveMissionPreviewOverlay();
 
+	UFUNCTION()
+	void CreateCombatOverlay();
+
+	UFUNCTION()
+	void ShowCombatOverlay();
+
+	UFUNCTION()
+	void HideCombatOverlay();
+
+	UFUNCTION()
+	void CreateSettingsOverlay();
+
+	UFUNCTION()
+	void ShowSettingsOverlay();
+
+	UFUNCTION()
+	void HideSettingsOverlay();
+
+	UFUNCTION()
+	FORCEINLINE UCombatOverlay* GetCombatOverlay() { return CombatOverlay; }
+
 protected:
 
 
@@ -55,6 +79,9 @@ private:
 
 	UPROPERTY()
 	AFantasyPlayerController* PlayerController;
+
+	UPROPERTY()
+	UMyGameInstance* GameInstance;
 
 	UPROPERTY()
 	UMissionClearOverlay* MissionClearOverlay;
@@ -73,5 +100,17 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Overlay")
 	TSubclassOf<UMissionPreviewOverlay> MissionPreviewOverlayClass;
+
+	UPROPERTY()
+	UCombatOverlay* CombatOverlay;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Overlay")
+	TSubclassOf<UCombatOverlay> CombatOverlayClass;
+
+	UPROPERTY()
+	USettingsOverlay* SettingsOverlay;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Overlay")
+	TSubclassOf<USettingsOverlay> SettingsOverlayClass;
 	
 };

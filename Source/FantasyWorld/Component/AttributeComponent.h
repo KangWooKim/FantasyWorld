@@ -34,6 +34,7 @@ public:
 	FORCEINLINE int32 GetGold() const { return Gold; }
 	FORCEINLINE int32 GetSouls() const { return Souls; }
 	FORCEINLINE float GetDodgeCost() const { return DodgeCost; }
+	FORCEINLINE float GetAttackCost() const { return AttackCost; }
 	FORCEINLINE float GetStamina() const { return Stamina; }
 		
 
@@ -60,8 +61,11 @@ private :
 		int32 Souls;
 
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
-		float DodgeCost = 14.f;
+	float AttackCost = 15.f;
 
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
-		float StaminaRegenRate = 8.f;
+	float DodgeCost = 14.f;
+
+	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
+	float StaminaRegenRate = 8.f;
 };

@@ -71,13 +71,14 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 
 	if (BoxHit.GetActor())
 	{
-		if (ActorIsSameType(BoxHit.GetActor())) return;
-
+		if (ActorIsSameType(BoxHit.GetActor()) || BoxHit.GetActor()->ActorHasTag(FName(TEXT("Dead")))) return;
+		
 		UGameplayStatics::ApplyDamage(BoxHit.GetActor(), Damage, GetInstigator()->GetController(), this, UDamageType::StaticClass());
 		ExecuteGetHit(BoxHit);
 		CreateFields(BoxHit.ImpactPoint);
 	}
 }
+
 
 bool AWeapon::ActorIsSameType(AActor* OtherActor)
 {

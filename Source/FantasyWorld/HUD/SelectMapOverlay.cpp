@@ -67,7 +67,18 @@ void USelectMapOverlay::OnInfinityModeButtonClicked()
     if (ButtonClickedSound) {
         UGameplayStatics::PlaySound2D(this, ButtonClickedSound, 1.f, 1.f, 0.f, nullptr, nullptr, true);
     }
-    MapName = TEXT("/Game/Maps/InfinityLand");
+
+    const int RandomNumber = FMath::RandRange(0, 2);
+    if (RandomNumber == 0) {
+        MapName = TEXT("/Game/Maps/InfinityLand1");
+    }
+    else if (RandomNumber == 1) {
+        MapName = TEXT("/Game/Maps/InfinityLand2");
+    }
+    else if (RandomNumber == 2) {
+        MapName = TEXT("/Game/Maps/InfinityLand");
+    }
+    
     UMyGameInstance* GameInstance = Cast<UMyGameInstance>(GetGameInstance());
     if (GameInstance) {
         GameInstance->SetMapName(MapName);

@@ -12,10 +12,10 @@
 #include "Components/AudioComponent.h"
 #include "FantasyWorld/Character/Enemy/Enemy.h"
 #include "FantasyWorld/HUD/NormalLevelHUD.h"
+#include "FantasyWorld/HUD/CombatOverlay.h"
 
 ANormalLevelGameMode::ANormalLevelGameMode()
 {
-	
 }
 
 void ANormalLevelGameMode::BeginPlay()
@@ -26,7 +26,9 @@ void ANormalLevelGameMode::BeginPlay()
 
 	GameInstance = GameInstance == nullptr ? Cast<UMyGameInstance>(GetGameInstance()) : GameInstance;
 	PlayerController = PlayerController == nullptr ? Cast<AFantasyPlayerController>(World->GetFirstPlayerController()) : PlayerController;
-	HUD = HUD == nullptr ? Cast<ANormalLevelHUD>(PlayerController->GetHUD()) : HUD;
+	if (PlayerController) {
+		HUD = HUD == nullptr ? Cast<ANormalLevelHUD>(PlayerController->GetHUD()) : HUD;
+	}
 
 	BGMComponent = NewObject<UAudioComponent>(this);
 	if (BGMComponent)
@@ -57,6 +59,14 @@ void ANormalLevelGameMode::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	GameInstance = GameInstance == nullptr ? Cast<UMyGameInstance>(GetGameInstance()) : GameInstance;
 	BGMComponent->SetVolumeMultiplier(GameInstance->GetBGMVolume());
+	PlayerController = PlayerController == nullptr ? Cast<AFantasyPlayerController>(World->GetFirstPlayerController()) : PlayerController;
+	
+	if (PlayerController) {
+		HUD = HUD == nullptr ? Cast<ANormalLevelHUD>(PlayerController->GetHUD()) : HUD;
+		if (HUD) {
+			HUD->GetCombatOverlay()->UpdateLeftEnemyText(FMath::Clamp(LeftEnemyNumber, 0, TotalEnemyNumber));
+		}
+	}
 
 }
 
@@ -77,6 +87,7 @@ void ANormalLevelGameMode::EnemyDie()
 	if (LeftEnemyNumber == 0) {
 		StageClear();
 	}
+	HUD->GetCombatOverlay()->UpdateLeftEnemyText(FMath::Clamp(LeftEnemyNumber, 0, TotalEnemyNumber));
 }
 
 void ANormalLevelGameMode::SpawnPlayerCharacter()

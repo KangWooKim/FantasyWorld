@@ -91,6 +91,9 @@ private:
 	USoundBase* HitSound;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
+	USoundBase* DeathSound;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
 	UParticleSystem* HitParticles;
 
 	UPROPERTY(EditDefaultsOnly, Category = Combat)
