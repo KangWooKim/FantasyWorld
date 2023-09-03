@@ -40,6 +40,7 @@ enum class EEnemyState : uint8
 
 };
 
+// 필살기 모드에 진입 했는가 여부를 파악하기 위해 사용하는 열거형
 UENUM(BlueprintType)
 enum class ELethalState : uint8
 {

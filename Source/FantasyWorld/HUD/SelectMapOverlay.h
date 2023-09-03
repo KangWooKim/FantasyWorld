@@ -20,46 +20,56 @@ class FANTASYWORLD_API USelectMapOverlay : public UUserWidget
 
 public:
 
-	virtual void NativeConstruct() override;
+    // NativeConstruct 메서드를 오버라이딩합니다. 이는 위젯이 구성될 때 호출됩니다.
+    virtual void NativeConstruct() override;
 
-	UFUNCTION()
-		void OnGrassLandButtonClicked();
+    // GrassLand 맵 버튼이 클릭됐을 때 호출되는 함수입니다.
+    UFUNCTION()
+        void OnGrassLandButtonClicked();
 
+    // IceLand 맵 버튼이 클릭됐을 때 호출되는 함수입니다.
+    UFUNCTION()
+        void OnIceLandButtonClicked();
 
-	UFUNCTION()
-		void OnIceLandButtonClicked();
+    // InfinityMode 맵 버튼이 클릭됐을 때 호출되는 함수입니다.
+    UFUNCTION()
+        void OnInfinityModeButtonClicked();
 
-
-	UFUNCTION()
-		void OnInfinityModeButtonClicked();
-
-	UFUNCTION()
-		void OnQuitButtonClicked();
+    // 종료 버튼이 클릭됐을 때 호출되는 함수입니다.
+    UFUNCTION()
+        void OnQuitButtonClicked();
 
 protected:
 
-
 private:
 
-	UPROPERTY(meta = (BindWidget))
-	UButton* GrassLandButton;
+    // GrassLand 맵 선택 버튼입니다.
+    UPROPERTY(meta = (BindWidget))
+        UButton* GrassLandButton;
 
-	UPROPERTY(meta = (BindWidget))
-	UButton* IceLandButton;
+    // IceLand 맵 선택 버튼입니다.
+    UPROPERTY(meta = (BindWidget))
+        UButton* IceLandButton;
 
-	UPROPERTY(meta = (BindWidget))
-	UButton* InfinityModeButton;
+    // InfinityMode 맵 선택 버튼입니다.
+    UPROPERTY(meta = (BindWidget))
+        UButton* InfinityModeButton;
 
-	UPROPERTY(meta = (BindWidget))
-	UButton* QuitButton;
+    // 종료 버튼입니다.
+    UPROPERTY(meta = (BindWidget))
+        UButton* QuitButton;
 
-	UPROPERTY(EditAnywhere)
-	USoundBase* ButtonClickedSound;
+    // 버튼 클릭 시 재생할 사운드입니다.
+    UPROPERTY(EditAnywhere)
+        USoundBase* ButtonClickedSound;
 
-	UPROPERTY()
-	FString MapName;
+    // 현재 선택된 맵의 이름을 저장합니다.
+    UPROPERTY()
+        FString MapName;
 
-	UPROPERTY()
-	ALobbyLevelHUD* HUD;
+    // HUD를 저장합니다.
+    UPROPERTY()
+        ALobbyLevelHUD* HUD;
+
 
 };

@@ -15,6 +15,7 @@ class FANTASYWORLD_API UHealthBar : public UUserWidget
 	GENERATED_BODY()
 public :
 
+	// 체력 바를 참조합니다.
 	UPROPERTY(meta = (BindWidget))
 	class UProgressBar* HealthBar;
 

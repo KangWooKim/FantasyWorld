@@ -23,61 +23,77 @@ class FANTASYWORLD_API USelectCharacterOverlay : public UUserWidget
 
 public:
 
-	void NativeConstruct();
+	// 기본 생성 함수. 오버레이가 생성되면 호출됩니다.
+	void NativeConstruct() override;
 
+	// Countess 버튼을 클릭했을 때 호출될 함수
 	UFUNCTION()
-	void OnCountessButtonClicked();
+		void OnCountessButtonClicked();
 
+	// Phase 버튼을 클릭했을 때 호출될 함수
 	UFUNCTION()
-	void OnPhaseButtonClicked();
+		void OnPhaseButtonClicked();
 
+	// Quit 버튼을 클릭했을 때 호출될 함수
 	UFUNCTION()
-	void OnQuitButtonClicked();
+		void OnQuitButtonClicked();
 
+	// Countess 버튼에 마우스를 올렸을 때 호출될 함수
 	UFUNCTION()
-	void OnHoveredCountessButton();
+		void OnHoveredCountessButton();
 
+	// Countess 버튼에서 마우스를 내렸을 때 호출될 함수
 	UFUNCTION()
-	void OnUnHoveredCountessButton();
+		void OnUnHoveredCountessButton();
 
+	// Phase 버튼에 마우스를 올렸을 때 호출될 함수
 	UFUNCTION()
-	void OnHoverPhaseButton();
+		void OnHoverPhaseButton();
 
+	// Phase 버튼에서 마우스를 내렸을 때 호출될 함수
 	UFUNCTION()
-	void OnUnHoverPhaseButton();
+		void OnUnHoverPhaseButton();
 
 protected:
 
+	// 생략
 
 private:
 
+	// Countess 버튼의 참조
 	UPROPERTY(meta = (BindWidget))
-	UButton* CountessButton;
+		UButton* CountessButton;
 
+	// Phase 버튼의 참조
 	UPROPERTY(meta = (BindWidget))
-	UButton* PhaseButton;
+		UButton* PhaseButton;
 
+	// Quit 버튼의 참조
 	UPROPERTY(meta = (BindWidget))
-	UButton* QuitButton;
-	
-	UPROPERTY(EditAnywhere)
-	USoundBase* ButtonClickedSound;
+		UButton* QuitButton;
 
+	// 버튼 클릭 시 재생될 사운드
 	UPROPERTY(EditAnywhere)
-	UMediaPlayer* MediaPlayer;
+		USoundBase* ButtonClickedSound;
 
+	// 미디어를 재생할 미디어 플레이어
 	UPROPERTY(EditAnywhere)
-	TArray<UFileMediaSource*> MediaSources;
+		UMediaPlayer* MediaPlayer;
 
+	// 미디어 소스 목록
 	UPROPERTY(EditAnywhere)
-	UMediaTexture* MediaTexture;
+		TArray<UFileMediaSource*> MediaSources;
 
+	// 미디어 텍스쳐
+	UPROPERTY(EditAnywhere)
+		UMediaTexture* MediaTexture;
+
+	// Slate 브러쉬. 여기에 미디어 텍스쳐나 다른 텍스처를 설정할 수 있습니다.
 	UPROPERTY()
-	UTexture2D* Texture;
+		FSlateBrush Brush;
 
-	UPROPERTY()
-	FSlateBrush Brush;
-
+	// 이미지 위젯. 미디어나 텍스처를 표시하는 데 사용됩니다.
 	UPROPERTY(meta = (BindWidget))
-	UImage* Image;
+		UImage* Image;
+
 };
