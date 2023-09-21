@@ -6,7 +6,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-void// Tick 함수는 프레임마다 호출되는 함수입니다.
+
 void ASoul::Tick(float DeltaTime)
 {
 	// 부모 클래스의 Tick 함수를 호출합니다.

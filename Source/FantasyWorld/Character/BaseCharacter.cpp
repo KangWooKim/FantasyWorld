@@ -20,6 +20,7 @@
 #include "FantasyWorld/Pickups/Soul.h"
 #include "FantasyWorld/GameInstance/MyGameInstance.h"
 #include "Enemy/Enemy.h"
+#include "Components/SphereComponent.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -61,6 +62,23 @@ ABaseCharacter::ABaseCharacter()
 
 	// 초기 액션 상태 설정 (EAS_Unoccupied는 캐릭터가 현재 특별한 액션을 하지 않고 있음을 의미)
 	ActionState = EActionState::EAS_Unoccupied;
+
+	// 락온 기능을 위해 캐릭터가 적을 볼 수 있는 범위를 설정.
+	LockOnRange = CreateDefaultSubobject<USphereComponent>(TEXT("LockOnRange"));
+	LockOnRange->SetupAttachment(RootComponent); // 루트 컴포넌트에 붙입니다.
+
+	LockOnRange->OnComponentBeginOverlap.AddDynamic(this, &ABaseCharacter::OnBeginCapture);
+	LockOnRange->OnComponentEndOverlap.AddDynamic(this, &ABaseCharacter::OnEndCapture);
+
+	// 시야에 지장을 주지 않도록 설정 (렌더링 안 함)
+	LockOnRange->SetVisibility(false);
+	LockOnRange->SetHiddenInGame(true);  // 게임에서도 숨김
+	LockOnRange->InitSphereRadius(1000.f);
+
+	// 물리적인 충돌을 비활성화하면서 오버랩 이벤트만 활성화
+	LockOnRange->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // 충돌 쿼리만 활성화
+	LockOnRange->SetCollisionResponseToAllChannels(ECR_Ignore);     // 모든 채널에 대한 반응을 무시
+	LockOnRange->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap); // Pawn(적이 될 수 있음) 채널만 오버랩으로 설정
 }
 
 // 게임이 시작되거나 스폰될 때 호출됩니다.
@@ -173,24 +191,64 @@ void ABaseCharacter::LockOnTarget()
 // 가장 가까운 적을 찾는 메서드입니다.
 AActor* ABaseCharacter::GetClosestEnemy()
 {
-	TArray<AActor*> FoundEnemies;
-	// GetWorld()을 이용해 게임 세계에서 AEnemy 클래스를 모두 찾습니다.
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemy::StaticClass(), FoundEnemies);
-
-	float ClosestDistanceSqr = FLT_MAX;
 	AActor* ClosestEnemy = nullptr;
+	float MinDistance = FLT_MAX; // 초기값을 최대값으로 설정
 
-	// 찾은 적들 중 가장 가까운 적을 찾습니다.
-	for (AActor* Enemy : FoundEnemies) {
-		float DistanceSqr = FVector::DistSquared(Enemy->GetActorLocation(), GetActorLocation());
-		if (DistanceSqr < ClosestDistanceSqr) {
-			ClosestDistanceSqr = DistanceSqr;
+	// 플레이어의 위치
+	FVector MyLocation = GetActorLocation();
+
+	// 시야 내 적 들 중에서 가장 가까운 적을 찾습니다.
+	for (AActor* Enemy : CapturedEnemies) {
+		float Distance = FVector::Dist(MyLocation, Enemy->GetActorLocation());
+
+		// LineTrace를 사용하여 시야에 장애물이 있는지 확인
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this); // 플레이어는 무시
+		QueryParams.AddIgnoredActor(Enemy); // 현재 적도 무시
+		FHitResult HitResult;
+
+		// LineTrace결과 플레이어와 적 사이에 물체가 존재하는 경우 
+		//시야 범위 내지만 직접 볼 수는 없기 때문에 해당 대상은 락온 가능 대상에서 제외합니다.
+		bool bHasLineOfSight = !GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			MyLocation,
+			Enemy->GetActorLocation(),
+			ECC_Visibility,
+			QueryParams
+		);
+
+		if (bHasLineOfSight && Distance < MinDistance) {
+			MinDistance = Distance;
 			ClosestEnemy = Enemy;
 		}
 	}
 
 	return ClosestEnemy;
 }
+
+void ABaseCharacter::OnBeginCapture(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	// OtherActor가 BaseEnemy의 인스턴스인지 확인합니다.
+	if (OtherActor && OtherActor->IsA(AEnemy::StaticClass()))
+	{
+		CapturedEnemies.Add(OtherActor); // TSet에 추가
+	}
+}
+
+void ABaseCharacter::OnEndCapture(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	// OtherActor가 BaseEnemy의 인스턴스인지 확인하고 TSet에서 제거
+	if (OtherActor && OtherActor->IsA(AEnemy::StaticClass()))
+	{
+		// 만약 현재 락온 중인 적이 시야 밖으로 사라진 것이라면 락온 기능을 중단합니다.
+		if (bUseLockOnTarget && CurrentLockedTarget == OtherActor) {
+			bUseLockOnTarget = false;
+			CurrentLockedTarget = nullptr;
+		}
+		CapturedEnemies.Remove(OtherActor);
+	}
+}
+
 
 // 메뉴를 여는 메서드입니다.
 void ABaseCharacter::OpenMenu()
@@ -593,6 +651,7 @@ float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 	SetHUDHealth(); // HUD의 체력을 업데이트합니다.
 	return DamageAmount; // 받은 데미지 값을 반환합니다.
 }
+
 
 // HUD의 체력을 설정하는 메서드입니다.
 void ABaseCharacter::SetHUDHealth()

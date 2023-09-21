@@ -9,6 +9,8 @@
 // UObject/Interface.h를 포함하여 언리얼의 인터페이스 기능을 사용할 수 있게 함.
 #include "UObject/Interface.h"
 
+#include "PickupInterface.generated.h"
+
 // UPickupInterface 클래스의 코드 생성을 위한 매크로.
 // 이 클래스는 수정할 필요가 없음.
 UINTERFACE(MinimalAPI)

@@ -33,6 +33,14 @@ public:
 	// 캐릭터가 죽었을 때 발생하는 이벤트. 외부에서 구독 가능
 	FOnDeathEnd OnDeathEnd;
 
+	// 시야 범위에 들어왔을 때 호출되는 함수. 포착된 적 리스트에 범위에 들어온 적을 추가합니다.
+	UFUNCTION()
+	void OnBeginCapture(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	// 시야 범위에서 적이 나갔을 때 호출되는 함수. 포착된 적 리스트에서 범위에 나간 적을 제거합니다.
+	UFUNCTION()
+	void OnEndCapture(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
 protected:
 	// Called when the game starts or when spawned
 	// 게임 시작 혹은 캐릭터 생성 시 호출되는 함수
@@ -295,6 +303,11 @@ private:
 	UPROPERTY()
 		bool bUseLockOnTarget = false;
 
-
+	// 록온 사용시 사용할 시야 범위 입니다. 이 내부의 적만 록온이 가능합니다.
+	UPROPERTY(EditAnywhere, Category = "LockOn")
+	class USphereComponent* LockOnRange;
 	
+	// 지금 현재 록온 범위 내에 있는 적들입니다.
+	UPROPERTY()
+	TSet<AActor*> CapturedEnemies;
 };
